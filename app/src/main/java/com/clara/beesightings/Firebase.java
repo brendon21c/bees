@@ -83,7 +83,7 @@ public class Firebase {
 
 		Log.d(TAG, "Querying for sightings for this userid : " + userId);
 
-		Query query = database.getReference();
+		Query query = database.getReference().orderByChild("userId").equalTo(userId);
 
 		query.addValueEventListener(new ValueEventListener() {
 			@Override

@@ -28,7 +28,7 @@ public class UserSightingsAdapter extends ArrayAdapter<BeeSighting> {
 		BeeSighting sighting = getItem(postition);
 
 		if (convertView == null) {
-			convertView = LayoutInflater.from(getContext()).inflate(layoutResource, parent, false);
+			convertView = LayoutInflater.from(context).inflate(layoutResource, parent, false);
 		}
 
 		TextView listNumberTV = (TextView) convertView.findViewById(R.id.list_number);
