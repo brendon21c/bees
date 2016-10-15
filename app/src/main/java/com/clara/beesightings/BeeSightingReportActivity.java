@@ -44,7 +44,8 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 	EditText mBeeNumberET;
 	EditText mBeeLocationDescriptionET;
 	Button mSubmitReportButton;
-	Button mThisUserReportsButton;
+	Button mThisUserReportsListButton;
+	Button mThisUserReportsMapButton;
 	Button mAllUserReportMapButton;
 
 	@Override
@@ -56,7 +57,8 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 		mBeeNumberET = (EditText) findViewById(R.id.bee_number_et);
 
 		mSubmitReportButton = (Button) findViewById(R.id.bee_report_submit_button);
-		mThisUserReportsButton = (Button) findViewById(R.id.this_users_reports_button);
+		mThisUserReportsListButton = (Button) findViewById(R.id.this_users_reports_list_button);
+		mThisUserReportsMapButton = (Button) findViewById(R.id.this_users_reports_map_button);
 		mAllUserReportMapButton = (Button) findViewById(R.id.map_all_users_reports_button);
 
 		mSubmitReportButton.setOnClickListener(new View.OnClickListener() {
@@ -66,17 +68,27 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 			}
 		});
 
-		mThisUserReportsButton.setOnClickListener(new View.OnClickListener() {
+		mThisUserReportsListButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				thisUserSightings();
 			}
 		});
 
+
+		mThisUserReportsMapButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+
+				mapSightings(true);   /* onlyThisUser = true */
+			}
+		});
+
+
 		mAllUserReportMapButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				mapAllSightings();
+				mapSightings(false);   /* onlyThisUsers = false = show everyone */
 			}
 		});
 	}
@@ -92,7 +104,6 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 		int beeNum = Integer.parseInt(mBeeNumberET.getText().toString());
 		currentSighting = new BeeSighting(beeNum, beeLoc);
 
-		//todo remove when works :)
 		String userId = getSharedPreferences(SignInActivity.USERS_PREFS, MODE_PRIVATE).getString(SignInActivity.FIREBASE_USER_ID_PREF_KEY, "something is borked");
 		Log.d(TAG, "userid from prefs = " +userId);
 		currentSighting.setUserId(userId);
@@ -295,9 +306,9 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 
 	}
 
-	private void mapAllSightings() {
-		//TODO Map reports surrounding this user. Map will allow scrolling and zooming
+	private void mapSightings(boolean onlyThisUser) {
 		Intent allSightings = new Intent(this, MapActivity.class);
+		allSightings.putExtra(MapActivity.USER_SIGHTINGS_ONLY, onlyThisUser);
 		startActivity(allSightings);
 	}
 

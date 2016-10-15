@@ -5,6 +5,7 @@
     <string name="you_saw_some_bees_where">You saw some bees! Where?</string>
     <string name="how_many_bees_an_approximate_number_is_fine">How many bees? An approximate number is fine</string>
     <string name="submit_report">Submit report</string>
-    <string name="all_of_your_bee_reports">View all of your bee reports</string>
+    <string name="all_of_your_bee_reports_list">View and edit all of your bee reports</string>
+    <string name="all_of_your_bee_reports_map">VMap all of your bee reports</string>
     <string name="map_everyone_bee_reports">Map everyone\'s bee reports</string>
 </resources>

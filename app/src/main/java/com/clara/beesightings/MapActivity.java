@@ -17,12 +17,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.ArrayList;
 
 
-/** Todo show a map with markers for bee reports */
+/** Todo show a map with markers for bee reports  - add flag for this user OR for latests */
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, Firebase.SightingsUpdatedListener{
 
-	TextView mMapLabel;
-	private int numberOfSightings = 30;
+	private TextView mMapLabel;
+	private int numberOfSightings = 100;
+	private String mMapTitle;
+
+	static final String USER_SIGHTINGS_ONLY = "com.clara.beesightings.user_sightings_only";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -36,8 +39,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 		mapFragment.getMapAsync(this);     //onMapReady callback once done
 
 		Firebase fb = new Firebase();
-		fb.getMostRecentSightings(this, numberOfSightings);   // can't get everything... request the most recent
 
+		//Show the user's sightings, or everyone's ?
+
+		if (getIntent().getExtras().getBoolean(USER_SIGHTINGS_ONLY)) {
+
+			String userId = getSharedPreferences(SignInActivity.USERS_PREFS, MODE_PRIVATE).getString(SignInActivity.FIREBASE_USER_ID_PREF_KEY, "something has gone wrong here");
+			fb.getUserSightings(this, userId);
+			mMapTitle = "Showing your reported sightings";
+
+		}
+		else {
+
+			fb.getMostRecentSightings(this, numberOfSightings);   // can't get everything... request the most recent
+			mMapTitle = "Showing the " + numberOfSightings + " most recent sightings";
+
+		}
 
 
 	}
@@ -82,11 +99,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 			}
 
 			//Set the camera to center on the most recent sighting. Zoom out so map shows most of the world.
-			BeeSighting mostRecent = sightings.get(sightings.size()-1);
-			CameraUpdate update = CameraUpdateFactory.newLatLngZoom(mostRecent.getLatLng(), map.getMinZoomLevel());
-			map.moveCamera(update);
 
-			mMapLabel.setText("Showing the " + numberOfSightings + " most recent sightings");
+			if (sightings.size() >= 1) {
+				BeeSighting mostRecent = sightings.get(sightings.size()-1);
+				CameraUpdate update = CameraUpdateFactory.newLatLngZoom(mostRecent.getLatLng(), map.getMinZoomLevel());
+				map.moveCamera(update);
+				mMapLabel.setText(mMapTitle);
+			}
+
+			else {
+				mMapLabel.setText("No sightings found");
+			}
 
 
 		} else {

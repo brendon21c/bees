@@ -13,8 +13,17 @@
 
 
     <TextView
+        android:id="@+id/instructions_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Your sightings here"/>
+        android:text="Tap to edit, long-press to delete"/>
+
+    <ListView
+        android:id="@+id/user_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/instructions_tv">
+
+    </ListView>
 
 </RelativeLayout>

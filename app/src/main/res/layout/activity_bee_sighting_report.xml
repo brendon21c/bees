@@ -48,18 +48,27 @@
 
 
     <Button
-        android:id="@+id/this_users_reports_button"
+        android:id="@+id/this_users_reports_list_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/all_of_your_bee_reports"
+        android:text="@string/all_of_your_bee_reports_list"
         android:layout_marginTop="40dp"
         />
+
+    <Button
+        android:id="@+id/this_users_reports_map_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/all_of_your_bee_reports_map"
+        />
+
 
     <Button
         android:id="@+id/map_all_users_reports_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/map_everyone_bee_reports"
+        android:layout_marginTop="40dp"
         />
 
 </LinearLayout>

@@ -89,6 +89,10 @@ public class BeeSighting {
 		return number + bees;
 	}
 
+	@Exclude
+	String firebaseKey;
+
+
 
 	/** These are used by  firebase - the fields to put / fetch from the database **/
 
