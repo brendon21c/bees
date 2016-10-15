@@ -10,6 +10,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -53,7 +54,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 			fb.getMostRecentSightings(this, numberOfSightings);   // can't get everything... request the most recent
 			mMapTitle = "Showing the " + numberOfSightings + " most recent sightings";
-
+			//FIXME what if we request 100 most recent but only 10 sightings in DB? This message is wrong
 		}
 
 
@@ -81,12 +82,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 	}
 
 
+	boolean updateCurrentMap = false;
+
 	public void sightingsUpdated(ArrayList<BeeSighting> sightings)  {
 
 		//update map once map is ready and Firebase data is available
 
 		if (mapReady && map != null) {
 
+			//Make a note of the camera position....
+			CameraPosition cp = map.getCameraPosition();
+			//remove any old markers. This also resets the camera to initial position TODO is there a method that clears markers without moving the camera?
+			map.clear();
+
+			if (!updateCurrentMap) {
+				//Move camera to most recent sighting
+				BeeSighting mostRecent = sightings.get(sightings.size() - 1);
+				CameraUpdate update = CameraUpdateFactory.newLatLngZoom(mostRecent.getLatLng(), map.getMinZoomLevel());
+				map.moveCamera(update);
+
+			} else {
+				// move camera to the position it was at
+				map.moveCamera(CameraUpdateFactory.newCameraPosition(cp));
+			}
+
+
+			//Add markers
 			for (BeeSighting s : sightings) {
 				LatLng position = s.getLatLng();
 				String markerTitle = s.getMarkerTitle();
@@ -98,18 +119,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 				);
 			}
 
-			//Set the camera to center on the most recent sighting. Zoom out so map shows most of the world.
-
+			//Set label
 			if (sightings.size() >= 1) {
-				BeeSighting mostRecent = sightings.get(sightings.size()-1);
-				CameraUpdate update = CameraUpdateFactory.newLatLngZoom(mostRecent.getLatLng(), map.getMinZoomLevel());
-				map.moveCamera(update);
 				mMapLabel.setText(mMapTitle);
 			}
 
 			else {
 				mMapLabel.setText("No sightings found");
 			}
+
+			//Once the map has been drawn once, don't move to initial zoom level
+			updateCurrentMap = true;
 
 
 		} else {
@@ -118,6 +138,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 		}
 
 	}
+
+
 
 
 }

@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-@IgnoreExtraProperties
+//@IgnoreExtraProperties
 public class BeeSighting {
 
 	double latitude;
@@ -82,11 +82,13 @@ public class BeeSighting {
 		return getFormattedDate() + ": " + locationDescription;
 	}
 
+	@Exclude
 	protected String getFormattedDate() {
 		String formattedDate = formatter.format(sightingDate);
 		return formattedDate;
 	}
 
+	@Exclude
 	protected String getMarkerTitle() {
 		String bees = (number == 1) ? " bee" : " bees";
 		return number + bees;

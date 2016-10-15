@@ -83,6 +83,8 @@ public class Firebase {
 
 		Log.d(TAG, "Querying for sightings for this userid : " + userId);
 
+		//Query start with an orderByXXX method and then use startAt, equalTo, endAt to filter.
+
 		Query query = database.getReference().orderByChild("userId").equalTo(userId);
 
 		query.addValueEventListener(new ValueEventListener() {
