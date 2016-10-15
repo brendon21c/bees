@@ -45,7 +45,8 @@ public class Firebase {
 
 		//TODO if this is already set up, it will replace the SightingsUpdatedListener with a new one.
 
-		mostRecentQuery = database.getReference().orderByKey().limitToLast(number);
+		mostRecentQuery = database.getReference().limitToFirst(number);
+
 		mostRecentListener = new ValueEventListener() {
 			@Override
 			public void onDataChange(DataSnapshot dataSnapshot) {
@@ -80,16 +81,23 @@ public class Firebase {
 
 	public void getUserSightings(final SightingsUpdatedListener listener, String userId) {
 
-		Query query = database.getReference().equalTo(userId);
+		Log.d(TAG, "Querying for sightings for this userid : " + userId);
+
+		Query query = database.getReference();
+
 		query.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(DataSnapshot dataSnapshot) {
 				ArrayList<BeeSighting> list = new ArrayList<>();
+				Log.d(TAG, "All data:" + dataSnapshot);
 				for (DataSnapshot ds : dataSnapshot.getChildren()) {
 					BeeSighting sighting = (ds.getValue(BeeSighting.class));
 					sighting.firebaseKey = ds.getKey();
 					list.add(sighting);
 				}
+
+				Log.d(TAG, "Results for this user : " + list);
+
 				listener.sightingsUpdated(list);
 			}
 
@@ -101,17 +109,21 @@ public class Firebase {
 
 	}
 
-	public void updateSighting(String key, int number, String description) {
-		//TODO!
-		Log.d(TAG, "Update sighting " + key + " " + number + " " + description);
+	public void updateSighting(BeeSighting sighting) {
+
+		Log.d(TAG, "Update sighting " + sighting);
+		DatabaseReference ref = database.getReference().child(sighting.firebaseKey);
+		Log.d(TAG, "in update, reference to update is " + ref);
+		ref.setValue(sighting);
+
 	}
 
 
-	public void deleteSighting(String key) {
-		//TODO!
-		Log.d(TAG, "Deleting key " + key);
+	public void deleteSighting(BeeSighting sighting) {
+		//TODO test!
+		Log.d(TAG, "Deleting item" + sighting);
 
-		database.getReference().child(key).removeValue();   // ?
+		database.getReference().child(sighting.firebaseKey).removeValue();   // This works
 
 	}
 

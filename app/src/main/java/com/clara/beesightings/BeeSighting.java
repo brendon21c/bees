@@ -79,12 +79,15 @@ public class BeeSighting {
 
 	@Exclude
 	protected String getMarkerText() {
-		String formattedDate = formatter.format(sightingDate);
-		return formattedDate + ": " + locationDescription;
+		return getFormattedDate() + ": " + locationDescription;
 	}
 
+	protected String getFormattedDate() {
+		String formattedDate = formatter.format(sightingDate);
+		return formattedDate;
+	}
 
-	public String getMarkerTitle() {
+	protected String getMarkerTitle() {
 		String bees = (number == 1) ? " bee" : " bees";
 		return number + bees;
 	}
@@ -144,5 +147,6 @@ public class BeeSighting {
 	public void setSightingDate(Date sightingDate) {
 		this.sightingDate = sightingDate;
 	}
+
 
 }

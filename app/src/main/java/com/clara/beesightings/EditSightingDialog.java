@@ -20,15 +20,15 @@ public class EditSightingDialog extends DialogFragment {
 
 	private static final String NUMBER = "number";
 	private static final String DESCRIPTION = "description";
-	private static final String KEY = "key";
+	private static final String POSITION = "list_position";
 
 
-	public static EditSightingDialog newInstance(BeeSighting toEdit) {
+	public static EditSightingDialog newInstance(BeeSighting toEdit, int listPosition) {
 		EditSightingDialog dialog = new EditSightingDialog();
 		Bundle args = new Bundle();
 		args.putInt(NUMBER, toEdit.getNumber());
+		args.putInt(POSITION, listPosition);
 		args.putString(DESCRIPTION, toEdit.getLocationDescription());
-		args.putString(KEY, toEdit.firebaseKey);
 
 		dialog.setArguments(args);
 		return dialog;
@@ -49,7 +49,7 @@ public class EditSightingDialog extends DialogFragment {
 	private SightingUpdatedListener mListener;
 
 	interface SightingUpdatedListener {
-		void sightingUpdated(String key, int number, String description);
+		void sightingUpdated(int position, int number, String description);
 	}
 
 
@@ -57,8 +57,8 @@ public class EditSightingDialog extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 
 		final String description = getArguments().getString(DESCRIPTION, null);
-		int number = getArguments().getInt(NUMBER, 0);
-		final String key = getArguments().getString(KEY, null);
+		int number = getArguments().getInt(NUMBER, -1);
+		final int position = getArguments().getInt(POSITION, -1);
 
 		//TODO verify these above have values
 
@@ -69,7 +69,7 @@ public class EditSightingDialog extends DialogFragment {
 		final EditText numberET = (EditText) view.findViewById(R.id.edit_dialog_number);
 		final EditText descriptionET = (EditText) view.findViewById(R.id.edit_dialog_description);
 
-		numberET.setText(number);
+		numberET.setText(number + "");   //Hack to convert number to string. Otherwise the int is assumed to be thie ID of a resource
 		descriptionET.setText(description);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -82,11 +82,10 @@ public class EditSightingDialog extends DialogFragment {
 
 						String newDescription = descriptionET.getText().toString();
 						try {
-							int newNumber = Integer.parseInt(numberET.getText().toString());
-							mListener.sightingUpdated(key, newNumber, newDescription);
-						} catch (Exception e) {
+							int newNumber = Integer.parseInt(numberET.getText().toString().trim());
+							mListener.sightingUpdated(position, newNumber, newDescription);
+						} catch (NumberFormatException e) {
 							Toast.makeText(getActivity(), "Enter a number", Toast.LENGTH_LONG).show();
-							return;
 						}
 					}
 				});
