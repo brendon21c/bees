@@ -10,6 +10,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -25,6 +27,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 	private TextView mMapLabel;
 	private int numberOfSightings = 100;
 	private String mMapTitle;
+
+	float mUserColor = BitmapDescriptorFactory.HUE_BLUE;
+	float mEveryoneElseColor = BitmapDescriptorFactory.HUE_YELLOW;   //Change to whatever colors are preferred
+
+	String mUserId;
 
 	static final String USER_SIGHTINGS_ONLY = "com.clara.beesightings.user_sightings_only";
 
@@ -43,12 +50,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 		//Show the user's sightings, or everyone's ?
 
+		//Need the user's ID to color-code the markers
+		mUserId = getSharedPreferences(SignInActivity.USERS_PREFS, MODE_PRIVATE).getString(SignInActivity.FIREBASE_USER_ID_PREF_KEY, "something has gone wrong here");
+		fb.getUserSightings(this, mUserId);
+
+
 		if (getIntent().getExtras().getBoolean(USER_SIGHTINGS_ONLY)) {
-
-			String userId = getSharedPreferences(SignInActivity.USERS_PREFS, MODE_PRIVATE).getString(SignInActivity.FIREBASE_USER_ID_PREF_KEY, "something has gone wrong here");
-			fb.getUserSightings(this, userId);
 			mMapTitle = "Showing your reported sightings";
-
 		}
 		else {
 
@@ -109,6 +117,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 			//Add markers
 			for (BeeSighting s : sightings) {
+
+				float color = s.getUserId().equals(mUserId) ? mUserColor : mEveryoneElseColor;
+
 				LatLng position = s.getLatLng();
 				String markerTitle = s.getMarkerTitle();
 				String markerText = s.getMarkerText();
@@ -116,6 +127,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 						.position(position)
 						.title(markerTitle)
 						.snippet(markerText)
+						.icon(BitmapDescriptorFactory.defaultMarker(color))
 				);
 			}
 
