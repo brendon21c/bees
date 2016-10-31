@@ -8,4 +8,7 @@
     <string name="all_of_your_bee_reports_list">View and edit all of your bee reports</string>
     <string name="all_of_your_bee_reports_map">Map all of your bee reports</string>
     <string name="map_everyone_bee_reports">Map everyone\'s bee reports</string>
+    <string name="loading_map_msg">Loading map...</string>
+    <string name="no_sightings_found">No sightings found</string>
+    <string name="showing_d_sightings">Showing %d sightings</string>
 </resources>

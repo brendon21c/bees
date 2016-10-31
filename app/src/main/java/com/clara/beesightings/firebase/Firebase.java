@@ -1,4 +1,4 @@
-package com.clara.beesightings;
+package com.clara.beesightings.firebase;
 
 import android.util.Log;
 
@@ -23,20 +23,18 @@ public class Firebase {
 
 	private final String TAG = "FIREBASE INTERACTION";
 
-	Firebase() {
+	public Firebase() {
 		database = FirebaseDatabase.getInstance();
 
 	}
 
-	void addSighting(BeeSighting bee) {
+	public void addSighting(BeeSighting bee) {
 
 		DatabaseReference ref = database.getReference();
 		DatabaseReference newChild = ref.push();
 		newChild.setValue(bee);
 
 	}
-
-
 
 	Query mostRecentQuery;
 	ValueEventListener mostRecentListener;
@@ -55,7 +53,7 @@ public class Firebase {
 
 				for (DataSnapshot ds : dataSnapshot.getChildren()) {
 					BeeSighting sighting = (ds.getValue(BeeSighting.class));
-					sighting.firebaseKey = ds.getKey();
+					sighting.setFirebaseKey(ds.getKey());
 					list.add(sighting);
 				}
 				listener.sightingsUpdated(list);
@@ -83,7 +81,7 @@ public class Firebase {
 
 		Log.d(TAG, "Querying for sightings for this userid : " + userId);
 
-		//Query start with an orderByXXX method and then use startAt, equalTo, endAt to filter.
+		//Query starts with an orderByXXX method and then (optionally) use startAt, equalTo, endAt to filter.
 
 		Query query = database.getReference().orderByChild("userId").equalTo(userId);
 
@@ -94,7 +92,7 @@ public class Firebase {
 				Log.d(TAG, "All data:" + dataSnapshot);
 				for (DataSnapshot ds : dataSnapshot.getChildren()) {
 					BeeSighting sighting = (ds.getValue(BeeSighting.class));
-					sighting.firebaseKey = ds.getKey();
+					sighting.setFirebaseKey(ds.getKey());
 					list.add(sighting);
 				}
 
@@ -114,18 +112,16 @@ public class Firebase {
 	public void updateSighting(BeeSighting sighting) {
 
 		Log.d(TAG, "Update sighting " + sighting);
-		DatabaseReference ref = database.getReference().child(sighting.firebaseKey);
+		DatabaseReference ref = database.getReference().child(sighting.getFirebaseKey());
 		Log.d(TAG, "in update, reference to update is " + ref);
 		ref.setValue(sighting);
-
 	}
 
 
 	public void deleteSighting(BeeSighting sighting) {
-		//TODO test!
-		Log.d(TAG, "Deleting item" + sighting);
 
-		database.getReference().child(sighting.firebaseKey).removeValue();   // This works
+		Log.d(TAG, "Deleting item" + sighting);
+		database.getReference().child(sighting.getFirebaseKey()).removeValue();
 
 	}
 

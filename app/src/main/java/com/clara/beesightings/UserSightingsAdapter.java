@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.clara.beesightings.firebase.BeeSighting;
+
 /**
  * Created by admin on 10/15/16.
  */

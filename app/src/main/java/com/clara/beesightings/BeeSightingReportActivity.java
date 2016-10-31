@@ -1,18 +1,15 @@
 package com.clara.beesightings;
 
-import android.*;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.health.PackageHealthStats;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -24,6 +21,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.clara.beesightings.firebase.BeeSighting;
+import com.clara.beesightings.firebase.Firebase;
+
 
 public class BeeSightingReportActivity extends AppCompatActivity {
 
@@ -47,6 +48,8 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 	Button mThisUserReportsListButton;
 	Button mThisUserReportsMapButton;
 	Button mAllUserReportMapButton;
+
+	BeeSighting mCurrentSighting;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -94,19 +97,25 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 	}
 
 
-	BeeSighting currentSighting;
+
 
 	private void submitReport() {
 
-		//TODO Validate! Check data is present
-
 		String beeLoc = mBeeLocationDescriptionET.getText().toString();
+		String beeNumStr = mBeeNumberET.getText().toString();
+
+		if (beeLoc.length() == 0 || !beeNumStr.matches("^\\d+$"))  {
+			Toast.makeText(this, "Please enter both a numer and description", Toast.LENGTH_LONG).show();
+			return;
+		}
+
 		int beeNum = Integer.parseInt(mBeeNumberET.getText().toString());
-		currentSighting = new BeeSighting(beeNum, beeLoc);
+
+		mCurrentSighting = new BeeSighting(beeNum, beeLoc);
 
 		String userId = getSharedPreferences(SignInActivity.USERS_PREFS, MODE_PRIVATE).getString(SignInActivity.FIREBASE_USER_ID_PREF_KEY, "something is borked");
 		Log.d(TAG, "userid from prefs = " +userId);
-		currentSighting.setUserId(userId);
+		mCurrentSighting.setUserId(userId);
 
 
 		//TODO get location in callbacks. Pause app - prevent more submissions - until location obtained or not.
@@ -116,7 +125,7 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 
 
 	private boolean haveLocationPermission() {
-		/*Starting in API 23, permission requesting is different. Make request 23-style. */
+		/*Starting in API 23, permission requesting is different. Make request 23-style using the compat library */
 		return (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
 	}
 
@@ -126,13 +135,13 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 
 	//This is the callback for ActivityCompat.requestPermissions
 	@Override
-	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 		//Arrays are empty if request denied.
 		if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
 
 			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
 				//yay
-				getLocation();   //hmm, circular. Should stop after
+				getLocation();
 			}
 
 			else {
@@ -212,6 +221,7 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 					Log.d(TAG, "Location manager listener provider disabled");
 				}
 			};
+
 			//request a location update
 
 			//todo replace with Handler. Thread is bad(?) timeout for location not found.
@@ -239,8 +249,6 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 			locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, singleLocationListener, null);
 
 			timeoutThread.start();
-
-
 
 
 		} catch (SecurityException se) {
@@ -281,35 +289,39 @@ public class BeeSightingReportActivity extends AppCompatActivity {
 	private void notifyLocationAvailable(Location location) {
 		//Now can save bee sighting
 
-		currentSighting.setLocation(location);
+		mCurrentSighting.setLocation(location);
 
-		Log.d(TAG, "About to save this sighting: " + currentSighting);
+		Log.d(TAG, "About to save this sighting: " + mCurrentSighting);
 
 		Firebase fb = new Firebase();
-		fb.addSighting(currentSighting);
+		fb.addSighting(mCurrentSighting);
 		clearCurrentSighting();
 
 	}
 
 	private void clearCurrentSighting() {
-		currentSighting = null;
+
+		mCurrentSighting = null;
 		mBeeLocationDescriptionET.getText().clear();
 		mBeeNumberET.getText().clear();
 		Toast.makeText(this, "Sending report to Firebase - thank you!", Toast.LENGTH_LONG).show();
+
 	}
 
 
 	private void thisUserSightings() {
-		//TODO launch new Activity with list of reports. Offer ability to edit or delete reports.
+
 		Intent thisUserSightings = new Intent(this, ManageSightingsActivity.class);
 		startActivity(thisUserSightings);
 
 	}
 
 	private void mapSightings(boolean onlyThisUser) {
+
 		Intent allSightings = new Intent(this, MapActivity.class);
 		allSightings.putExtra(MapActivity.USER_SIGHTINGS_ONLY, onlyThisUser);
 		startActivity(allSightings);
+
 	}
 
 

@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.clara.beesightings.firebase.BeeSighting;
+import com.clara.beesightings.firebase.Firebase;
 
 import java.util.ArrayList;
 
@@ -18,7 +20,9 @@ import java.util.ArrayList;
 
 
 //TODO notify user that app is working - looks like it isn't doing anything.
-	//TODO stop user modifying a sighting while the update is being processed?
+//TODO stop user modifying a sighting while the update is being processed?
+	//TODO the update depends on the list position. The list may change as the user is updating. Should use sighting key to update.
+
 
 public class ManageSightingsActivity extends AppCompatActivity implements Firebase.SightingsUpdatedListener, EditSightingDialog.SightingUpdatedListener {
 
@@ -51,9 +55,8 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 		//Request this user's reported sightings
 		firebase.getUserSightings(this, userId);
 
-
-
 	}
+
 
 	@Override
 	public void sightingsUpdated(ArrayList<BeeSighting> s) {
@@ -71,6 +74,7 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 
 	}
 
+
 	private void activateList() {
 
 		mSightingList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -79,7 +83,7 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 				//Display dialog with ability to edit number of bees and description
 
 				BeeSighting toEdit = mAdapter.getItem(i);
-				EditSightingDialog dialog = EditSightingDialog.newInstance(toEdit, i);
+				EditSightingDialog dialog = EditSightingDialog.newInstance(toEdit);
 				dialog.show(getSupportFragmentManager(), "Edit Sighting Dialog");
 				// in callback, if user has edited:   firebase.updateSighting();
 			}
@@ -87,7 +91,7 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 
 
 
-				mSightingList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+		mSightingList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
 
@@ -118,15 +122,11 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 	//Update Dialog callback
 
 	@Override
-	public void sightingUpdated(int listPosition, int number, String description) {
+	public void sightingUpdated(BeeSighting updated) {
 
-		BeeSighting sighting = mAdapter.getItem(listPosition);
-		sighting.setNumber(number);
-		sighting.setLocationDescription(description);
+		Log.d(TAG, "Sighting updated callback, updated sighting is " + updated);
 
-		Log.d(TAG, "Sighting updated callback, updated sighting is " + sighting);
-
-		firebase.updateSighting(sighting);
+		firebase.updateSighting(updated);
 
 	}
 }

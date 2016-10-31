@@ -14,9 +14,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiActivity;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -50,7 +48,7 @@ public class SignInActivity extends FragmentActivity implements GoogleApiClient.
 		mFirebaseAuth = FirebaseAuth.getInstance();
 
 		//Use Google Sign In to request the user data required by this app. Let's request basic data, the default.
-		//plus the user's email, although we aren't going to use it (it makes differentiating users easier in the firebase console
+		//plus the user's email, although we aren't going to use it here.
 		//If other info was needed, you'd chain on methods like requestProfile() before building.
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 				.requestEmail()
@@ -77,28 +75,79 @@ public class SignInActivity extends FragmentActivity implements GoogleApiClient.
 
 	}
 
-	private void authStateChanged(FirebaseUser user) {
-		//This method is called if user signs in or signs out
-		if (user == null) {
-			Log.d(TAG, "user is signed out");
-			//Toast.makeText(this, "Firebase: User signed OUT", Toast.LENGTH_LONG).show();
-		} else {
-			Log.d(TAG, "user has signed in");
-			//Toast.makeText(this, "Firebase: User signed IN", Toast.LENGTH_LONG).show();
-			//boot up the app
 
-			//Save the user id in shared prefs
+	@Override
+	public void onClick(View view) {
 
-			Log.d(TAG, "The user id is = " + user.getUid() + " " +user.toString());
-
-			SharedPreferences.Editor prefEditor = getSharedPreferences(USERS_PREFS, MODE_PRIVATE).edit();
-			prefEditor.putString(FIREBASE_USER_ID_PREF_KEY, user.getUid());
-			prefEditor.apply();
-
-			Intent startBeeSightings = new Intent(this, BeeSightingReportActivity.class);
-			startActivity(startBeeSightings);
+		if (view.getId() == R.id.sign_in_button) {
+			signIn();
 		}
 	}
+
+
+	//This launches an Activity where the user can sign into their Google account, or even create a new account.
+	private void signIn() {
+		Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+		startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+	}
+
+
+	//This deals with the result from the above method. Pass results to handleSignIn method.
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (requestCode == REQUEST_CODE_SIGN_IN) {
+			GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+			handleSignIn(result);
+		}
+
+	}
+
+
+	// This deals with the user signing into their Google account. This checks for success or failure.
+	// If success, credentials will be returned, that can be used to sign into Firebase on the user's behalf.
+	private void handleSignIn(GoogleSignInResult result) {
+		Log.d(TAG, "handleSignIn for result " + result.getSignInAccount());
+		if (result.isSuccess()) {
+			//yay. Now need to use these credentials to authenticate to FireBase.
+			Log.d(TAG, "Google sign in success");
+			GoogleSignInAccount account = result.getSignInAccount();
+			firebaseAuthWithGoogleCreds(account);
+		} else {
+			Log.e(TAG, "Google sign in failed");
+			//This will fail if user has no internet connection OR your haven't enabled Google auth in Firebase console
+			//and probably other reasons too. Check the log for the error message.
+			Toast.makeText(this, "Google sign in failed", Toast.LENGTH_LONG).show();
+		}
+	}
+
+
+	// This uses the credentials returned from a successful sign in to a Google account to authenticate to Firebase
+	// Notice that this method doesn't do anything else with the results of Authentication - that's handled by an AuthStateListener, below
+	private void firebaseAuthWithGoogleCreds(GoogleSignInAccount account) {
+		AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+		Log.d(TAG, "firebase auth attempt with creds " + credential);
+
+		//Attempt to sign in to Firebase with the google credentials. The onCompleteListener is used for logging success or failure.
+		mFirebaseAuth.signInWithCredential(credential)
+				.addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+					@Override
+					public void onComplete(@NonNull Task<AuthResult> task) {
+						if (task.isSuccessful()) {
+							Log.d(TAG, "firebase auth success");
+						} else {
+							Log.d(TAG, "firebase auth fail");
+						}
+					}
+				});
+	}
+
+
+
+	//Add and remove listeners for auth state as this activity stops and starts
+	//The mAuthStateChangedListener is what will permit the user to continue with the app once authenticated.
 
 	@Override
 	public void onStart(){
@@ -113,66 +162,36 @@ public class SignInActivity extends FragmentActivity implements GoogleApiClient.
 	}
 
 
+	// This method is called if user signs in or signs out. It is also called when the app is launched.
+	// So if the user has already authenticated, and their session has not timed out, they will not be
+	// prompted to authenticate again. Instead, this will launch BeeSightingsReportActivity.
+
+	private void authStateChanged(FirebaseUser user) {
+		if (user == null) {
+			Log.d(TAG, "user is signed out");
+		} else {
+			Log.d(TAG, "user has signed in");
+
+			//Save the user id in shared prefs
+			Log.d(TAG, "The user id is = " + user.getUid() + " " +user.toString());
+
+			SharedPreferences.Editor prefEditor = getSharedPreferences(USERS_PREFS, MODE_PRIVATE).edit();
+			prefEditor.putString(FIREBASE_USER_ID_PREF_KEY, user.getUid());
+			prefEditor.apply();
+
+			//And then boot up the app by starting the BeeSightingsReportActivity
+			Intent startBeeSightings = new Intent(this, BeeSightingReportActivity.class);
+			startActivity(startBeeSightings);
+		}
+	}
+
+
+
 	@Override
 	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-		//TODO
-		Log.d(TAG, "CONNECTION FAILED");
+		//todo - handle this in a more useful way for the user
+		Toast.makeText(this, "Connection to Google failed", Toast.LENGTH_LONG).show();
+		Log.d(TAG, "CONNECTION FAILED" + connectionResult.getErrorMessage() + connectionResult.getErrorCode());
 
-	}
-
-	@Override
-	public void onClick(View view) {
-
-		if (view.getId() == R.id.sign_in_button) {
-			signIn();
-		}
-	}
-
-	private void signIn() {
-		Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-		startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
-		if (requestCode == REQUEST_CODE_SIGN_IN) {
-			GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-			handleSignIn(result);
-		}
-
-	}
-
-	private void handleSignIn(GoogleSignInResult result) {
-		Log.d(TAG, "handleSignIn for result " + result.getSignInAccount());
-		if (result.isSuccess()) {
-			//yay. Now need to use these credentials to authenticate to FireBase.
-			Log.d(TAG, "Google sign in success");
-			GoogleSignInAccount account = result.getSignInAccount();
-			firebaseAuthWithGoogleCreds(account);
-		} else {
-			Log.e(TAG, "Google sign in failed");
-			//This will fail if user has no internet connection
-			Toast.makeText(this, "Google sign in failed - check your internet connection?", Toast.LENGTH_LONG).show();
-		}
-	}
-
-
-	private void firebaseAuthWithGoogleCreds(GoogleSignInAccount account) {
-		AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-		Log.d(TAG, "firebase auth attempt with creds " + credential);
-
-		mFirebaseAuth.signInWithCredential(credential)
-				.addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-					@Override
-					public void onComplete(@NonNull Task<AuthResult> task) {
-						if (task.isSuccessful()) {
-							Log.d(TAG, "firebase auth success");
-						} else {
-							Log.d(TAG, "firebase auth fail");
-						}
-					}
-				});
 	}
 }

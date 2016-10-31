@@ -2,7 +2,6 @@ package com.clara.beesightings;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -12,27 +11,26 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-/**
- * Created by admin on 10/14/16.
- */
+import com.clara.beesightings.firebase.BeeSighting;
+
+/* For editing a user's sighting report */
 
 public class EditSightingDialog extends DialogFragment {
 
-	private static final String NUMBER = "number";
-	private static final String DESCRIPTION = "description";
-	private static final String POSITION = "list_position";
+	private static final String SIGHTING = "bee_sighting";
 
 
-	public static EditSightingDialog newInstance(BeeSighting toEdit, int listPosition) {
+	// newInstance - sets up the current values for a sighting.
+	// Also provide the listPosition for convenience reporting which item has been edited.
+	public static EditSightingDialog newInstance(BeeSighting toEdit) {
 		EditSightingDialog dialog = new EditSightingDialog();
 		Bundle args = new Bundle();
-		args.putInt(NUMBER, toEdit.getNumber());
-		args.putInt(POSITION, listPosition);
-		args.putString(DESCRIPTION, toEdit.getLocationDescription());
+		args.putParcelable(SIGHTING, toEdit);
 
 		dialog.setArguments(args);
 		return dialog;
 	}
+
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -43,24 +41,24 @@ public class EditSightingDialog extends DialogFragment {
 		} else {
 			throw new RuntimeException("To show this dialog, the hosting Activity must implement SightingUpdatedListener");
 		}
-
 	}
 
 	private SightingUpdatedListener mListener;
 
 	interface SightingUpdatedListener {
-		void sightingUpdated(int position, int number, String description);
+		void sightingUpdated(BeeSighting updated);
 	}
 
 
 	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
+	public Dialog onCreateDialog(final Bundle savedInstanceState) {
 
-		final String description = getArguments().getString(DESCRIPTION, null);
-		int number = getArguments().getInt(NUMBER, -1);
-		final int position = getArguments().getInt(POSITION, -1);
+		final BeeSighting sighting = getArguments().getParcelable(SIGHTING);
 
-		//TODO verify these above have values
+		final String description = sighting.getLocationDescription();
+		final int number = sighting.getNumber();
+
+		//TODO verify the above have values
 
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
@@ -69,7 +67,7 @@ public class EditSightingDialog extends DialogFragment {
 		final EditText numberET = (EditText) view.findViewById(R.id.edit_dialog_number);
 		final EditText descriptionET = (EditText) view.findViewById(R.id.edit_dialog_description);
 
-		numberET.setText(number + "");   //Hack to convert number to string. Otherwise the int is assumed to be thie ID of a resource
+		numberET.setText(Integer.toString(number));
 		descriptionET.setText(description);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -82,9 +80,16 @@ public class EditSightingDialog extends DialogFragment {
 
 						String newDescription = descriptionET.getText().toString();
 						try {
+							//Validate that the data is an Integer number
 							int newNumber = Integer.parseInt(numberET.getText().toString().trim());
-							mListener.sightingUpdated(position, newNumber, newDescription);
+
+							sighting.setLocationDescription(newDescription);
+							sighting.setNumber(newNumber);
+
+							mListener.sightingUpdated(sighting);
+
 						} catch (NumberFormatException e) {
+
 							Toast.makeText(getActivity(), "Enter a number", Toast.LENGTH_LONG).show();
 						}
 					}
