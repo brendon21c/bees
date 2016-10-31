@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.clara.beesightings.firebase.BeeSighting;
 import com.clara.beesightings.firebase.Firebase;
@@ -77,19 +78,22 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 
 	private void activateList() {
 
+		//Tap to edit....
+
 		mSightingList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-				//Display dialog with ability to edit number of bees and description
 
+				//Display dialog with ability to edit number of bees and description
 				BeeSighting toEdit = mAdapter.getItem(i);
 				EditSightingDialog dialog = EditSightingDialog.newInstance(toEdit);
 				dialog.show(getSupportFragmentManager(), "Edit Sighting Dialog");
-				// in callback, if user has edited:   firebase.updateSighting();
+				// The callback - sightingUpdated() sends the update to Firebase.
 			}
 		});
 
 
+		// Long-press to delete
 
 		mSightingList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			@Override
@@ -107,6 +111,8 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 
 								Log.d(TAG, "Deleting " + toDelete);
 								firebase.deleteSighting(toDelete);
+								Toast.makeText(ManageSightingsActivity.this, "Sighting being deleted", Toast.LENGTH_LONG).show();
+
 							}
 						})
 						.setNegativeButton(android.R.string.cancel, null)
@@ -119,12 +125,14 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 
 	}
 
+
 	//Update Dialog callback
 
 	@Override
 	public void sightingUpdated(BeeSighting updated) {
 
 		Log.d(TAG, "Sighting updated callback, updated sighting is " + updated);
+		Toast.makeText(this, "Sighting updated", Toast.LENGTH_LONG).show();
 
 		firebase.updateSighting(updated);
 

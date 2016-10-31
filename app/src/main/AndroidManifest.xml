@@ -27,9 +27,12 @@
             android:value="@integer/google_play_services_version" />
 
 
+        <!--<meta-data-->
+            <!--android:name="com.google.android.geo.API_KEY"-->
+            <!--android:value="AIzaSyA-7CHEB4DNmS435FlOv6BMG8Cj6OR5EnQ"/>-->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_GOOGLE_MAPS_KEY_HERE"/>
+            android:value="@string/map_key"/>
 
     </application>
 
