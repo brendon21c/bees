@@ -21,15 +21,13 @@
         <activity android:name=".ManageSightingsActivity"/>
         <activity android:name=".MapActivity"/>
 
-        <!--Required to use Google maps (?) -->
+        <!--Required to use Google maps -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <!--TODO create a file res/values/keys.xml containing a string resource called map_key with your own Google Maps key in-->
 
-        <!--<meta-data-->
-            <!--android:name="com.google.android.geo.API_KEY"-->
-            <!--android:value="AIzaSyA-7CHEB4DNmS435FlOv6BMG8Cj6OR5EnQ"/>-->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/map_key"/>

@@ -11,4 +11,6 @@
     <string name="loading_map_msg">Loading map...</string>
     <string name="no_sightings_found">No sightings found</string>
     <string name="showing_d_sightings">Showing %d sightings</string>
+    <string name="tap_to_edit_long_press_to_delete">Tap to edit, long-press to delete</string>
+    <string name="loading_sightings_msg">Loading your sightings...</string>
 </resources>

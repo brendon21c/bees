@@ -12,11 +12,12 @@
     tools:context="com.clara.beesightings.ManageSightingsActivity">
 
 
+    <!--Instructions, also used to display loading message-->
     <TextView
         android:id="@+id/instructions_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tap to edit, long-press to delete"/>
+        android:text="@string/tap_to_edit_long_press_to_delete"/>
 
     <ListView
         android:id="@+id/user_list"

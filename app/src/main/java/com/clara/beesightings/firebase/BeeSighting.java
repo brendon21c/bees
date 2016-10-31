@@ -188,7 +188,7 @@ public class BeeSighting implements Parcelable {
 
 	//Required for the Parcelable interface, so that BeeSighting objects can be put in Bundles
 
-	// A really useful website for generating the Parceleable code for an particular class: http://www.parcelabler.com/
+	// A really useful website for generating the Parcelable code for an particular class: http://www.parcelabler.com/
 
 	@Override
 	public int describeContents() {

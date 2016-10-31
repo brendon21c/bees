@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.clara.beesightings.firebase.BeeSighting;
 
 /**
- * Created by admin on 10/15/16.
+ * Created by clara on 10/15/16.
  */
 
 public class UserSightingsAdapter extends ArrayAdapter<BeeSighting> {
@@ -37,7 +37,7 @@ public class UserSightingsAdapter extends ArrayAdapter<BeeSighting> {
 		TextView listDescriptionTV = (TextView) convertView.findViewById(R.id.list_description);
 		TextView listDateTV = (TextView) convertView.findViewById(R.id.list_date);
 
-		listNumberTV.setText(sighting.getNumber() + "");
+		listNumberTV.setText(sighting.getNumber() + "");   //Hack to turn number into String
 		listDescriptionTV.setText(sighting.getLocationDescription());
 		listDateTV.setText(sighting.getFormattedDate());
 

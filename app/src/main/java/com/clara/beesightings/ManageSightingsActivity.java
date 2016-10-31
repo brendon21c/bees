@@ -17,32 +17,34 @@ import com.clara.beesightings.firebase.Firebase;
 import java.util.ArrayList;
 
 
-/** A list of user's sightings, and ability to modify or delete */
+/** A list of user's sightings, and ability to modify or delete
+ * A local cache is maintained so even if user has no network connection, changes appear to be made, and they will be
+ * synced with the Firebase server once connectivity is restored. */
 
+public class ManageSightingsActivity extends AppCompatActivity implements Firebase.SightingsUpdatedListener, EditSightingDialog.SightingUpdatedListener, Firebase.CompleteListener {
 
-//TODO notify user that app is working - looks like it isn't doing anything.
-//TODO stop user modifying a sighting while the update is being processed?
-	//TODO the update depends on the list position. The list may change as the user is updating. Should use sighting key to update.
-
-
-public class ManageSightingsActivity extends AppCompatActivity implements Firebase.SightingsUpdatedListener, EditSightingDialog.SightingUpdatedListener {
-
+	private static final String DELETE_SIGHTING = "manage_sightings_delete_sighting";
+	private static final String UPDATE_SIGHTING = "manage_sightings_update_sighting";
 	ListView mSightingList;
+	TextView mInstructions;
 	UserSightingsAdapter mAdapter;
 
 	Firebase firebase;
 
 	private static String TAG = "MANAGE SIGHTINGS";
 
-	private TextView title;
-	private boolean loaded = false;
-
-	private boolean listActive = false;
+	private final String DELETE = "delete";
+	private final String UPDATE = "update";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_manage_sightings);
+
+		//Display loading message
+		mInstructions = (TextView) findViewById(R.id.instructions_tv);
+		mInstructions.setText(R.string.loading_sightings_msg);
 
 		mSightingList = (ListView) findViewById(R.id.user_list);
 		mAdapter = new UserSightingsAdapter(this, R.layout.user_sightings_list_element);
@@ -56,16 +58,13 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 		//Request this user's reported sightings
 		firebase.getUserSightings(this, userId);
 
+		addListListeners();
+
 	}
 
 
 	@Override
 	public void sightingsUpdated(ArrayList<BeeSighting> s) {
-
-		if (!listActive) {
-			activateList();
-			listActive = true;
-		}
 
 		Log.d(TAG, s.toString());
 
@@ -73,10 +72,13 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 		mAdapter.addAll(s);
 		mAdapter.notifyDataSetChanged();
 
+		//Change TextView to instructions
+		mInstructions.setText(R.string.tap_to_edit_long_press_to_delete);
+
 	}
 
 
-	private void activateList() {
+	private void addListListeners() {
 
 		//Tap to edit....
 
@@ -110,7 +112,8 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 								//So this will cause a value event, which causes Firebase to call sightings updated, which will update the list.
 
 								Log.d(TAG, "Deleting " + toDelete);
-								firebase.deleteSighting(toDelete);
+								//Provide a reference to this class to get a callback once the sighting has been updated, and a tag to differentiate different requests in the callback onFirebaseComplete
+								firebase.deleteSighting(toDelete, ManageSightingsActivity.this, DELETE_SIGHTING);
 								Toast.makeText(ManageSightingsActivity.this, "Sighting being deleted", Toast.LENGTH_LONG).show();
 
 							}
@@ -132,9 +135,33 @@ public class ManageSightingsActivity extends AppCompatActivity implements Fireba
 	public void sightingUpdated(BeeSighting updated) {
 
 		Log.d(TAG, "Sighting updated callback, updated sighting is " + updated);
-		Toast.makeText(this, "Sighting updated", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Uploading sighting update...", Toast.LENGTH_LONG).show();
 
-		firebase.updateSighting(updated);
+		//Provide a reference to this class to get a callback once the sighting has been updated, and a tag to differentiate different requests in the callback onFirebaseComplete
+		firebase.updateSighting(updated, this, UPDATE_SIGHTING);
+
+	}
+
+
+	//Firebase success/failure callback
+
+	@Override
+	public void onFirebaseComplete(String actionTag, boolean success) {
+
+		//If you wanted to do something on success or failure, this would be a good place.
+
+		String actionMsg = "";
+
+		switch (actionTag) {
+			case UPDATE_SIGHTING: { actionMsg = "updated"; break; }
+			case DELETE_SIGHTING: { actionMsg = "deleted"; break; }
+		}
+
+		String result = (success) ? "was successful" : "failed (check your internet connection?)";
+
+		String userMsg = "Sighting " + actionMsg + " " + result;
+
+		Toast.makeText(this, userMsg, Toast.LENGTH_LONG).show();
 
 	}
 }
